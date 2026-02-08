@@ -1,7 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import Overlay from './Overlay';
 import { spawnConfetti } from '../confetti';
+import { playCorrect, playWrong, playWin, playStreak } from '../sounds';
 
 const COLORS = [
   { name: 'Rot', hex: '#e53e3e', btn: '#e53e3e' },
@@ -18,6 +19,15 @@ const COLORS = [
 
 const TOTAL = 10;
 
+const PRAISE = [
+  'Super!', 'Genau!', 'Richtig!', 'Klasse!', 'Toll!',
+  'Bravo!', 'Spitze!', 'Perfekt!',
+];
+const ENCOURAGE = [
+  'Nicht schlimm!', 'Fast!', 'Gleich hast du es!', 'Knapp daneben!',
+  'Weiter so!',
+];
+
 function shuffle(arr) {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -25,6 +35,10 @@ function shuffle(arr) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 function makeQuestion() {
@@ -38,51 +52,72 @@ export default function FarbenQuiz() {
   const [score, setScore] = useState(0);
   const [question, setQuestion] = useState(() => makeQuestion());
   const [feedback, setFeedback] = useState(null);
+  const [feedbackType, setFeedbackType] = useState(null);
   const [chosen, setChosen] = useState(null);
   const [results, setResults] = useState([]);
   const [showWin, setShowWin] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
+  const [streak, setStreak] = useState(0);
+  const [colorPulse, setColorPulse] = useState(true);
+  const displayRef = useRef(null);
 
   const startGame = useCallback(() => {
     setRound(0);
     setScore(0);
     setQuestion(makeQuestion());
     setFeedback(null);
+    setFeedbackType(null);
     setChosen(null);
     setResults([]);
     setShowWin(false);
+    setStreak(0);
+    setColorPulse(true);
   }, []);
 
   const handleAnswer = useCallback((color) => {
     if (chosen !== null) return;
     setChosen(color.name);
+    setColorPulse(false);
 
     const correct = color.name === question.correct.name;
     const newScore = correct ? score + 1 : score;
     const newRound = round + 1;
+    const newStreak = correct ? streak + 1 : 0;
     const newResults = [...results, correct ? 'correct' : 'wrong'];
+
+    setStreak(newStreak);
+    setResults(newResults);
 
     if (correct) {
       setScore(newScore);
-      setFeedback('\u2705 Richtig!');
+      const msg = newStreak >= 3
+        ? `\u{1F525} ${newStreak}x Serie! ${pick(PRAISE)}`
+        : `\u2705 ${pick(PRAISE)}`;
+      setFeedback(msg);
+      setFeedbackType('correct');
+      if (newStreak >= 3) playStreak(newStreak);
+      else playCorrect();
     } else {
       setFeedback(`\u274C Das war ${question.correct.name}!`);
+      setFeedbackType('wrong');
+      playWrong();
     }
-    setResults(newResults);
 
     setTimeout(() => {
       if (newRound >= TOTAL) {
         setFinalScore(newScore);
         setShowWin(true);
-        if (newScore >= 5) spawnConfetti();
+        if (newScore >= 5) { playWin(); spawnConfetti(); }
       } else {
         setRound(newRound);
         setQuestion(makeQuestion());
         setFeedback(null);
+        setFeedbackType(null);
         setChosen(null);
+        setColorPulse(true);
       }
     }, 1200);
-  }, [chosen, question, score, round, results]);
+  }, [chosen, question, score, round, results, streak]);
 
   const winIcon = finalScore >= 9 ? '\u{1F3C6}' : finalScore >= 6 ? '\u{1F3A8}' : '\u{1F4AA}';
   const winTitle = finalScore >= 9 ? 'Farben-Profi!' : finalScore >= 6 ? 'Toll gemacht!' : 'Weiter ueben!';
@@ -97,6 +132,7 @@ export default function FarbenQuiz() {
 
         <div className="stats-bar">
           <div className="stat">Richtig: {score} / {TOTAL}</div>
+          {streak >= 3 && <div className="stat animate-bounce-in">{'\u{1F525}'} {streak}x Serie!</div>}
         </div>
 
         <div className="game-board">
@@ -110,7 +146,8 @@ export default function FarbenQuiz() {
           </div>
 
           <div
-            className="color-display"
+            ref={displayRef}
+            className={`color-display${colorPulse ? ' animate-pulse' : ''}${feedbackType === 'correct' ? ' animate-bounce-in' : ''}`}
             style={{
               backgroundColor: question.correct.hex,
               border: question.correct.name === 'Weiss' ? '6px solid #ccc' : '6px solid white',
@@ -144,7 +181,9 @@ export default function FarbenQuiz() {
             })}
           </div>
 
-          <div className="feedback">{feedback}</div>
+          <div className={`feedback ${feedbackType === 'correct' ? 'animate-bounce-in' : feedbackType === 'wrong' ? 'animate-shake' : ''}`}>
+            {feedback}
+          </div>
         </div>
 
         <button className="btn btn-green" style={{ marginTop: 20 }} onClick={startGame}>

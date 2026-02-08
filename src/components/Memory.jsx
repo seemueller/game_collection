@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Overlay from './Overlay';
 import { spawnConfetti } from '../confetti';
+import { playFlip, playMatch, playNoMatch, playWin, playStreak } from '../sounds';
 
 const ALL_EMOJIS = [
   '\u{1F436}', '\u{1F431}', '\u{1F438}', '\u{1F98A}', '\u{1F43B}', '\u{1F43C}',
@@ -15,6 +16,11 @@ const DIFFICULTIES = [
   { pairs: 8, label: 'Mittel (8)', cols: 4 },
   { pairs: 10, label: 'Schwer (10)', cols: 5 },
   { pairs: 12, label: 'Sehr schwer (12)', cols: 6 },
+];
+
+const MATCH_MESSAGES = [
+  'Super!', 'Toll!', 'Klasse!', 'Genau!', 'Treffer!',
+  'Wow!', 'Spitze!', 'Bravo!', 'Mega!', 'Jawoll!',
 ];
 
 function shuffle(arr) {
@@ -36,6 +42,12 @@ function buildCards(pairCount) {
   }));
 }
 
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 export default function Memory() {
   const [pairCount, setPairCount] = useState(6);
   const [cols, setCols] = useState(4);
@@ -43,8 +55,21 @@ export default function Memory() {
   const [moves, setMoves] = useState(0);
   const [matchedPairs, setMatchedPairs] = useState(0);
   const [showWin, setShowWin] = useState(false);
+  const [streak, setStreak] = useState(0);
+  const [matchMsg, setMatchMsg] = useState(null);
+  const [elapsed, setElapsed] = useState(0);
+  const [gameActive, setGameActive] = useState(true);
   const flippedRef = useRef([]);
   const lockedRef = useRef(false);
+  const timerRef = useRef(null);
+
+  // Timer
+  useEffect(() => {
+    if (gameActive && !showWin) {
+      timerRef.current = setInterval(() => setElapsed((t) => t + 1), 1000);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [gameActive, showWin]);
 
   // 2-player state
   const [playerMode, setPlayerMode] = useState(1);
@@ -62,6 +87,10 @@ export default function Memory() {
     setCurrentPlayer(1);
     setScores([0, 0]);
     if (mode !== undefined) setPlayerMode(mode);
+    setStreak(0);
+    setMatchMsg(null);
+    setElapsed(0);
+    setGameActive(true);
     flippedRef.current = [];
     lockedRef.current = false;
   }, []);
@@ -74,6 +103,7 @@ export default function Memory() {
       if (card.flipped || card.matched) return prev;
       if (flippedRef.current.length >= 2) return prev;
 
+      playFlip();
       const next = prev.map((c, i) => (i === index ? { ...c, flipped: true } : c));
       flippedRef.current.push(index);
 
@@ -98,10 +128,22 @@ export default function Memory() {
             });
           }
 
+          setStreak((s) => {
+            const newStreak = s + 1;
+            if (newStreak >= 3) playStreak(newStreak);
+            else playMatch();
+            return newStreak;
+          });
+
+          setMatchMsg(MATCH_MESSAGES[Math.floor(Math.random() * MATCH_MESSAGES.length)]);
+          setTimeout(() => setMatchMsg(null), 900);
+
           setMatchedPairs((mp) => {
             const newMp = mp + 1;
             if (newMp === pairCount) {
+              setGameActive(false);
               setTimeout(() => {
+                playWin();
                 setShowWin(true);
                 spawnConfetti();
               }, 400);
@@ -110,7 +152,10 @@ export default function Memory() {
           });
           return matched;
         } else {
-          // No match - flip back after delay
+          // No match
+          playNoMatch();
+          setStreak(0);
+
           setTimeout(() => {
             setCards((p) =>
               p.map((c, i) =>
@@ -122,7 +167,7 @@ export default function Memory() {
             if (playerMode === 2) {
               setCurrentPlayer((cp) => (cp === 1 ? 2 : 1));
             }
-          }, 800);
+          }, 900);
         }
       }
 
@@ -131,7 +176,7 @@ export default function Memory() {
   }, [pairCount, playerMode, currentPlayer]);
 
   const winText = playerMode === 1
-    ? `Du hast alle ${pairCount} Paare in ${moves} Zuegen gefunden!`
+    ? `Alle ${pairCount} Paare in ${moves} Zuegen und ${formatTime(elapsed)}!`
     : scores[0] === scores[1]
       ? `Unentschieden! Beide Spieler haben ${scores[0]} Paare gefunden. (${moves} Zuege)`
       : scores[0] > scores[1]
@@ -143,6 +188,9 @@ export default function Memory() {
     : scores[0] === scores[1]
       ? '\u{1F91D}'
       : '\u{1F3C6}';
+
+  const starRating = moves <= pairCount + 2 ? 3 : moves <= pairCount * 2 ? 2 : 1;
+  const winStars = '\u2B50'.repeat(starRating);
 
   return (
     <>
@@ -172,6 +220,7 @@ export default function Memory() {
         <div className="stats-bar">
           {playerMode === 1 ? (
             <>
+              <div className="stat">{'\u23F1'} {formatTime(elapsed)}</div>
               <div className="stat">Zuege: {moves}</div>
               <div className="stat">Paare: {matchedPairs} / {pairCount}</div>
             </>
@@ -187,6 +236,12 @@ export default function Memory() {
             </>
           )}
         </div>
+
+        {streak >= 3 && (
+          <div className="streak-banner animate-bounce-in">
+            {'\u{1F525}'} {streak}x Serie!
+          </div>
+        )}
 
         {/* Difficulty selector */}
         <div className="difficulty-select">
@@ -208,12 +263,19 @@ export default function Memory() {
           </div>
         )}
 
-        <div className="game-board memory-board">
+        <div className="game-board memory-board" style={{ position: 'relative' }}>
+          {matchMsg && (
+            <div className="floating-msg animate-float-up">{matchMsg}</div>
+          )}
           <div className="memory-grid" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
             {cards.map((card, i) => (
               <div
                 key={card.id}
-                className={`memory-card${card.flipped || card.matched ? ' flipped' : ''}${card.matched ? ' matched' : ''}`}
+                className={
+                  `memory-card` +
+                  `${card.flipped || card.matched ? ' flipped' : ''}` +
+                  `${card.matched ? ' matched' : ''}`
+                }
                 onClick={() => flipCard(i)}
               >
                 <div className="card-front">?</div>
@@ -233,6 +295,7 @@ export default function Memory() {
         icon={winIcon}
         title="Super gemacht!"
         text={winText}
+        extra={winStars}
         onAction={() => { setShowWin(false); startGame(pairCount, playerMode); }}
       />
     </>
