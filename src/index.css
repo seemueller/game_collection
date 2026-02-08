@@ -248,6 +248,195 @@ body {
   animation: confetti-fall 3s ease-in forwards;
 }
 
+/* === Memory === */
+.memory-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.memory-card {
+  aspect-ratio: 1;
+  border-radius: 16px;
+  font-size: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s;
+  transform-style: preserve-3d;
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.memory-card.flipped { transform: rotateY(180deg); }
+.memory-card.matched { transform: rotateY(180deg) scale(0.92); opacity: 0.7; }
+
+.card-front, .card-back {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backface-visibility: hidden;
+}
+
+.card-front {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 2rem;
+}
+
+.card-back {
+  background: white;
+  border: 3px solid #e0e0e0;
+  transform: rotateY(180deg);
+}
+
+.difficulty-select {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.difficulty-select .btn { font-size: 1rem; padding: 12px 24px; }
+.difficulty-select .btn.active {
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.5), 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* === Zahlenspiel === */
+.task-display {
+  font-size: 3.5rem;
+  font-weight: bold;
+  text-align: center;
+  margin: 20px 0;
+  color: #333;
+}
+
+.answers-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  max-width: 400px;
+  margin: 20px auto;
+}
+
+.answer-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 24px;
+  font-size: 2rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+}
+
+.answer-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
+.answer-btn.correct { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #1a5c2a; }
+.answer-btn.wrong { background: linear-gradient(135deg, #f5576c 0%, #ff6b6b 100%); }
+.answer-btn:disabled { cursor: default; transform: none; }
+
+.visual-help {
+  text-align: center;
+  font-size: 2rem;
+  margin: 10px 0;
+  line-height: 1.6;
+  min-height: 60px;
+}
+
+.feedback {
+  text-align: center;
+  font-size: 2rem;
+  margin: 16px 0;
+  min-height: 48px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 16px;
+  background: #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 16px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #43e97b, #38f9d7);
+  border-radius: 8px;
+  transition: width 0.5s ease;
+}
+
+/* === Farben-Quiz === */
+.color-display {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  margin: 20px auto;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  border: 6px solid white;
+}
+
+.question-text {
+  text-align: center;
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin: 16px 0;
+  color: #333;
+}
+
+.color-answers {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  max-width: 400px;
+  margin: 20px auto;
+}
+
+.color-btn {
+  border: none;
+  border-radius: 20px;
+  padding: 20px;
+  font-size: 1.4rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+  color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.color-btn:hover { transform: scale(1.05); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
+.color-btn.correct { box-shadow: 0 0 0 5px #43e97b, 0 6px 20px rgba(0, 0, 0, 0.25); }
+.color-btn.wrong { opacity: 0.4; transform: scale(0.95); }
+.color-btn:disabled { cursor: default; }
+
+.round-counter {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.round-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e0e0e0;
+  transition: background 0.3s, transform 0.3s;
+}
+
+.round-dot.correct { background: #43e97b; transform: scale(1.1); }
+.round-dot.wrong { background: #f5576c; transform: scale(1.1); }
+.round-dot.current { background: #667eea; transform: scale(1.2); }
+
 /* --- Responsive --- */
 @media (max-width: 600px) {
   .home-title { font-size: 2rem; }
@@ -257,4 +446,7 @@ body {
   .game-title { font-size: 1.8rem; }
   .game-board { padding: 20px; }
   .back-button { width: 46px; height: 46px; font-size: 22px; }
+  .memory-grid { gap: 8px; }
+  .memory-card { font-size: 2rem; }
+  .card-front { font-size: 1.5rem; }
 }
