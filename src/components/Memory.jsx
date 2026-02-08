@@ -3,15 +3,16 @@ import { Link } from 'react-router-dom';
 import Overlay from './Overlay';
 import { spawnConfetti } from '../confetti';
 import { playFlip, playMatch, playNoMatch, playWin, playStreak } from '../sounds';
+import { shuffle } from '../utils';
 
-const ALL_EMOJIS = [
+export const ALL_EMOJIS = [
   '\u{1F436}', '\u{1F431}', '\u{1F438}', '\u{1F98A}', '\u{1F43B}', '\u{1F43C}',
   '\u{1F435}', '\u{1F981}', '\u{1F42E}', '\u{1F437}', '\u{1F430}', '\u{1F428}',
   '\u{1F42F}', '\u{1F984}', '\u{1F414}', '\u{1F427}', '\u{1F40D}', '\u{1F419}',
   '\u{1F422}', '\u{1F433}',
 ];
 
-const DIFFICULTIES = [
+export const DIFFICULTIES = [
   { pairs: 6, label: 'Leicht (6)', cols: 4 },
   { pairs: 8, label: 'Mittel (8)', cols: 4 },
   { pairs: 10, label: 'Schwer (10)', cols: 5 },
@@ -23,16 +24,7 @@ const MATCH_MESSAGES = [
   'Wow!', 'Spitze!', 'Bravo!', 'Mega!', 'Jawoll!',
 ];
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function buildCards(pairCount) {
+export function buildCards(pairCount) {
   const selected = shuffle(ALL_EMOJIS).slice(0, pairCount);
   return shuffle([...selected, ...selected]).map((emoji, i) => ({
     id: i,
@@ -42,7 +34,11 @@ function buildCards(pairCount) {
   }));
 }
 
-function formatTime(seconds) {
+export function getStarRating(moves, pairCount) {
+  return moves <= pairCount + 2 ? 3 : moves <= pairCount * 2 ? 2 : 1;
+}
+
+export function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return `${m}:${s.toString().padStart(2, '0')}`;
@@ -189,7 +185,7 @@ export default function Memory() {
       ? '\u{1F91D}'
       : '\u{1F3C6}';
 
-  const starRating = moves <= pairCount + 2 ? 3 : moves <= pairCount * 2 ? 2 : 1;
+  const starRating = getStarRating(moves, pairCount);
   const winStars = '\u2B50'.repeat(starRating);
 
   return (

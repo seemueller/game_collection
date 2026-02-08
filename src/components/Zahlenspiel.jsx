@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import Overlay from './Overlay';
 import { spawnConfetti } from '../confetti';
 import { playCorrect, playWrong, playWin, playStreak } from '../sounds';
+import { pick, rand } from '../utils';
 
-const TOTAL = 10;
+export const TOTAL = 10;
 const OBJECTS = ['\u{1F34E}', '\u{1F31F}', '\u{1F388}', '\u{1F36A}', '\u{1F41F}', '\u{1F338}', '\u{1F36C}', '\u{1F3AF}'];
 
 const PRAISE = [
@@ -16,11 +17,7 @@ const ENCOURAGE = [
   'Knapp daneben!', 'Weiter so!',
 ];
 
-function rand(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function makeTask() {
+export function makeTask() {
   const isAdd = Math.random() > 0.3;
   let a, b, answer;
   if (isAdd) {
@@ -50,10 +47,6 @@ function makeTask() {
     visual,
     options: [...options].sort(() => Math.random() - 0.5),
   };
-}
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 export default function Zahlenspiel() {
