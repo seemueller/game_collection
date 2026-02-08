@@ -249,9 +249,64 @@ body {
 }
 
 /* === Memory === */
+
+/* Mode selector (1/2 Spieler) */
+.mode-select {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.btn-mode {
+  font-size: 1rem;
+  padding: 10px 22px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.btn-mode.active {
+  background: rgba(255, 255, 255, 0.35);
+  border-color: white;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3), 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Player stats highlighting */
+.stat-player {
+  transition: background 0.3s, transform 0.3s;
+}
+
+.stat-active {
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05);
+}
+
+/* Turn indicator */
+.turn-indicator {
+  color: white;
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 12px;
+  padding: 8px 24px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { background: rgba(255, 255, 255, 0.2); }
+  50% { background: rgba(255, 255, 255, 0.35); }
+}
+
+/* Wider board for higher difficulties */
+.memory-board {
+  max-width: 700px;
+}
+
 .memory-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 
@@ -271,7 +326,14 @@ body {
 }
 
 .memory-card.flipped { transform: rotateY(180deg); }
-.memory-card.matched { transform: rotateY(180deg) scale(0.92); opacity: 0.7; }
+.memory-card.matched {
+  transform: rotateY(180deg);
+  cursor: default;
+}
+.memory-card.matched .card-back {
+  background: #e8f5e9;
+  border-color: #66bb6a;
+}
 
 .card-front, .card-back {
   position: absolute;
@@ -293,6 +355,7 @@ body {
   background: white;
   border: 3px solid #e0e0e0;
   transform: rotateY(180deg);
+  transition: background 0.3s, border-color 0.3s;
 }
 
 .difficulty-select {
@@ -446,7 +509,12 @@ body {
   .game-title { font-size: 1.8rem; }
   .game-board { padding: 20px; }
   .back-button { width: 46px; height: 46px; font-size: 22px; }
-  .memory-grid { gap: 8px; }
-  .memory-card { font-size: 2rem; }
-  .card-front { font-size: 1.5rem; }
+  .memory-grid { gap: 6px; }
+  .memory-card { font-size: 1.8rem; border-radius: 10px; }
+  .card-front { font-size: 1.2rem; border-radius: 10px; }
+  .card-back { border-radius: 10px; }
+  .mode-select { gap: 8px; }
+  .btn-mode { font-size: 0.9rem; padding: 8px 16px; }
+  .difficulty-select .btn { font-size: 0.85rem; padding: 10px 16px; }
+  .turn-indicator { font-size: 1rem; }
 }
