@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import Overlay from './Overlay';
 import { spawnConfetti } from '../confetti';
 import { playCorrect, playWrong, playWin, playStreak } from '../sounds';
+import { shuffle, pick } from '../utils';
 
-const COLORS = [
+export const COLORS = [
   { name: 'Rot', hex: '#e53e3e', btn: '#e53e3e' },
   { name: 'Blau', hex: '#3182ce', btn: '#3182ce' },
   { name: 'Gruen', hex: '#38a169', btn: '#38a169' },
@@ -17,7 +18,7 @@ const COLORS = [
   { name: 'Weiss', hex: '#f7f7f7', btn: '#a0aec0', light: true },
 ];
 
-const TOTAL = 10;
+export const TOTAL = 10;
 
 const PRAISE = [
   'Super!', 'Genau!', 'Richtig!', 'Klasse!', 'Toll!',
@@ -28,20 +29,7 @@ const ENCOURAGE = [
   'Weiter so!',
 ];
 
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function makeQuestion() {
+export function makeQuestion() {
   const correct = COLORS[Math.floor(Math.random() * COLORS.length)];
   const wrong = shuffle(COLORS.filter((c) => c.name !== correct.name)).slice(0, 3);
   return { correct, options: shuffle([correct, ...wrong]) };
